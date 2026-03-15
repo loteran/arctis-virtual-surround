@@ -60,20 +60,27 @@ elif [ "$SKIP_HRIR" = true ]; then
     echo "      $HRIR_DIR/hrir.wav"
     echo "      Then run: systemctl --user restart filter-chain.service"
 else
-    echo "      Downloading KEMAR Gardner 1995 HRIR (HeSuVi)..."
-    HRIR_URL="https://github.com/nicehash/HeSuVi/raw/master/hrir/44/KEMAR%20Gardner%201995/kemar.wav"
-    if command -v curl &>/dev/null; then
-        curl -fsSL -o "$HRIR_DIR/hrir.wav" "$HRIR_URL"
-    elif command -v wget &>/dev/null; then
-        wget -q -O "$HRIR_DIR/hrir.wav" "$HRIR_URL"
+    BUNDLED_HRIR="$REPO_DIR/hrir/EAC_Default.wav"
+    if [ -f "$BUNDLED_HRIR" ]; then
+        echo "      Using bundled HRIR (EAC_Default — HeSuVi 14-channel)..."
+        cp "$BUNDLED_HRIR" "$HRIR_DIR/hrir.wav"
+        echo "      Installed to: $HRIR_DIR/hrir.wav"
     else
-        echo "      [!] curl and wget not found."
-        echo "          Download manually from: https://github.com/nicehash/HeSuVi/tree/master/hrir/44"
-        echo "          Save as: $HRIR_DIR/hrir.wav"
-        echo "          Then run: systemctl --user restart filter-chain.service"
-        exit 1
+        echo "      Bundled HRIR not found, trying to download fallback..."
+        HRIR_URL="https://raw.githubusercontent.com/ArtIsWar/ArtTuneDB/main/hrir/44/EAC_Default.wav"
+        if command -v curl &>/dev/null; then
+            curl -fsSL -o "$HRIR_DIR/hrir.wav" "$HRIR_URL"
+        elif command -v wget &>/dev/null; then
+            wget -q -O "$HRIR_DIR/hrir.wav" "$HRIR_URL"
+        else
+            echo "      [!] curl and wget not found."
+            echo "          Place a HeSuVi-compatible 14-channel WAV at:"
+            echo "          $HRIR_DIR/hrir.wav"
+            echo "          Then run: systemctl --user restart filter-chain.service"
+            exit 1
+        fi
+        echo "      Downloaded to: $HRIR_DIR/hrir.wav"
     fi
-    echo "      Downloaded to: $HRIR_DIR/hrir.wav"
 fi
 
 # ── 3. WirePlumber priority config ────────────────────────────────────────────
